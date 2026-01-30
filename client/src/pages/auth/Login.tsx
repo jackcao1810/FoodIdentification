@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
+import { authService } from '../../services/authService';
 import Button from '../../components/common/Button';
 import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
@@ -24,23 +25,19 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Mock successful login
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password,
+      });
+
       dispatch(setCredentials({
-        user: {
-          id: 1,
-          username: '测试用户',
-          email: formData.email,
-          targetCalories: 2000,
-        },
-        token: 'mock-jwt-token',
+        user: response.user,
+        token: response.token,
       }));
-      
+
       navigate(from, { replace: true });
-    } catch (err) {
-      setError('登录失败，请检查邮箱和密码');
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message || '登录失败，请检查邮箱和密码');
     } finally {
       setLoading(false);
     }

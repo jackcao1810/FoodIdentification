@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../store/hooks';
 import { setCredentials } from '../../store/slices/authSlice';
+import { authService } from '../../services/authService';
 import Button from '../../components/common/Button';
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
@@ -34,23 +35,20 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Mock successful registration
+      const response = await authService.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
       dispatch(setCredentials({
-        user: {
-          id: 1,
-          username: formData.username,
-          email: formData.email,
-          targetCalories: 2000,
-        },
-        token: 'mock-jwt-token',
+        user: response.user,
+        token: response.token,
       }));
-      
+
       navigate('/');
-    } catch (err) {
-      setError('注册失败，请稍后重试');
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message || '注册失败，请稍后重试');
     } finally {
       setLoading(false);
     }

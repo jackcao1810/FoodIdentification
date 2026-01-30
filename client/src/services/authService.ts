@@ -29,18 +29,18 @@ export interface AuthResponse {
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
-    return response.data;
+    const response = await api.post<{ success: boolean; data: AuthResponse }>(API_ENDPOINTS.AUTH.LOGIN, credentials);
+    return response.data.data;
   },
 
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, data);
-    return response.data;
+    const response = await api.post<{ success: boolean; data: AuthResponse }>(API_ENDPOINTS.AUTH.REGISTER, data);
+    return response.data.data;
   },
 
   async getProfile(): Promise<User> {
-    const response = await api.get<User>(API_ENDPOINTS.AUTH.PROFILE);
-    return response.data;
+    const response = await api.get<{ success: boolean; data: User }>(API_ENDPOINTS.AUTH.PROFILE);
+    return response.data.data;
   },
 
   async logout(): Promise<void> {
@@ -48,7 +48,7 @@ export const authService = {
   },
 
   async updateProfile(data: Partial<User>): Promise<User> {
-    const response = await api.put<User>(API_ENDPOINTS.AUTH.PROFILE, data);
-    return response.data;
+    const response = await api.put<{ success: boolean; data: User }>(API_ENDPOINTS.AUTH.PROFILE, data);
+    return response.data.data;
   },
 };
