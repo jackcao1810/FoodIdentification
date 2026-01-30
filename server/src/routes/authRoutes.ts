@@ -49,7 +49,7 @@ router.post(
       const token = jwt.sign(
         { id: userId, email, username },
         process.env.JWT_SECRET || 'default-secret',
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: '7d' }
       );
 
       res.status(201).json({
@@ -99,7 +99,7 @@ router.post(
       const token = jwt.sign(
         { id: user.id, email: user.email, username: user.username },
         process.env.JWT_SECRET || 'default-secret',
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: '7d' }
       );
 
       res.json({

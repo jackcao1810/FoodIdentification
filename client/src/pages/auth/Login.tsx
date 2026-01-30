@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch } from '../store/hooks';
-import { setCredentials } from '../store/slices/authSlice';
-import Button from '../components/common/Button';
+import { useAppDispatch } from '../../store/hooks';
+import { setCredentials } from '../../store/slices/authSlice';
+import Button from '../../components/common/Button';
 import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
 const Login: React.FC = () => {
