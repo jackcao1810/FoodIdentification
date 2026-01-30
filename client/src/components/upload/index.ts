@@ -1,4 +1,4 @@
-export { ImageUploader } from './ImageUploader';
-export { DragDropZone } from './DragDropZone';
-export { CameraCapture } from './CameraCapture';
-export { ImagePreview } from './ImagePreview';
+export { default as ImageUploader } from './ImageUploader';
+export { default as DragDropZone } from './DragDropZone';
+export { default as CameraCapture } from './CameraCapture';
+export { default as ImagePreview } from './ImagePreview';
