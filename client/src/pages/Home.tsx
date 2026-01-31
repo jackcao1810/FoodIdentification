@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAppSelector } from '../store/hooks';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import { statisticsService } from '../services/statisticsService';
 import {
   CameraIcon,
   ChartBarIcon,
@@ -10,6 +11,14 @@ import {
   FireIcon,
   ArrowRightIcon,
 } from '@heroicons/react/24/outline';
+
+interface DailyStats {
+  totalCalories: number;
+  targetCalories: number;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+}
 
 const features = [
   {
@@ -44,9 +53,43 @@ const features = [
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const todayCalories = useAppSelector((state) => state.calorie.todayCalories);
-  const targetCalories = useAppSelector((state) => state.calorie.targetCalories);
+  const dispatch = useAppDispatch();
+  const [dailyStats, setDailyStats] = useState<DailyStats>({
+    totalCalories: 0,
+    targetCalories: 2000,
+    protein: 0,
+    carbohydrates: 0,
+    fat: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const loadDailyStats = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const stats = await statisticsService.getDailyStats();
+        setDailyStats({
+          totalCalories: stats.totalCalories,
+          targetCalories: stats.targetCalories,
+          protein: stats.protein,
+          carbohydrates: stats.carbohydrates,
+          fat: stats.fat,
+        });
+      } catch (error) {
+        console.error('Failed to load daily stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDailyStats();
+  }, [isAuthenticated]);
+
+  const todayCalories = dailyStats.totalCalories;
+  const targetCalories = dailyStats.targetCalories;
   const calorieProgress = Math.min((todayCalories / targetCalories) * 100, 100);
   const remainingCalories = Math.max(targetCalories - todayCalories, 0);
 
@@ -97,35 +140,52 @@ const Home: React.FC = () => {
 
         <Card>
           <h3 className="text-sm font-medium text-surface-500 mb-4">营养分布</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-surface-600">蛋白质</span>
-                <span className="font-medium text-surface-900">0g</span>
+          {loading ? (
+            <div className="animate-pulse space-y-4">
+              <div className="h-2 bg-surface-100 rounded-full"></div>
+              <div className="h-2 bg-surface-100 rounded-full"></div>
+              <div className="h-2 bg-surface-100 rounded-full"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-surface-600">蛋白质</span>
+                  <span className="font-medium text-surface-900">{dailyStats.protein}g</span>
+                </div>
+                <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((dailyStats.protein / 80) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
-                <div className="h-full w-1/4 bg-primary-500 rounded-full"></div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-surface-600">碳水化合物</span>
+                  <span className="font-medium text-surface-900">{dailyStats.carbohydrates}g</span>
+                </div>
+                <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((dailyStats.carbohydrates / 300) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-surface-600">脂肪</span>
+                  <span className="font-medium text-surface-900">{dailyStats.fat}g</span>
+                </div>
+                <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-yellow-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((dailyStats.fat / 65) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-surface-600">碳水化合物</span>
-                <span className="font-medium text-surface-900">0g</span>
-              </div>
-              <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
-                <div className="h-full w-1/3 bg-accent-500 rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-surface-600">脂肪</span>
-                <span className="font-medium text-surface-900">0g</span>
-              </div>
-              <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
-                <div className="h-full w-1/5 bg-yellow-500 rounded-full"></div>
-              </div>
-            </div>
-          </div>
+          )}
         </Card>
       </div>
 

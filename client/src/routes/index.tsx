@@ -7,11 +7,12 @@ import PageLoader from '../components/common/PageLoader';
 
 const Home = lazy(() => import('../pages/Home'));
 const Upload = lazy(() => import('../pages/Upload'));
-const Result = lazy(() => import('../pages/Result'));
+const Result = lazy(() => import('../pages/ResultEnhanced'));
 const History = lazy(() => import('../pages/History'));
 const Statistics = lazy(() => import('../pages/Statistics'));
 const Profile = lazy(() => import('../pages/Profile'));
 const Settings = lazy(() => import('../pages/Settings'));
+const PasswordSettings = lazy(() => import('../pages/PasswordSettings'));
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
 
@@ -64,6 +65,14 @@ const AppRoutes: React.FC = () => {
                   }
                 />
                 <Route path="/settings" element={<Settings />} />
+                <Route 
+                  path="/settings/password" 
+                  element={
+                    <PrivateRoute>
+                      <PasswordSettings />
+                    </PrivateRoute>
+                  } 
+                />
               </Route>
               <Route element={<AuthLayout />}>
                 <Route path="/auth/login" element={<Login />} />

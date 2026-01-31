@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { CameraIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export interface CameraCaptureProps {
@@ -7,62 +7,87 @@ export interface CameraCaptureProps {
   facingMode?: 'user' | 'environment';
 }
 
-const CameraCapture: React.FC<CameraCaptureProps> = ({
+const CameraCapture: React.FC<CameraCaptureProps> = memo(({
   onCapture,
   onClose,
   facingMode = 'environment',
 }) => {
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentFacingMode, setCurrentFacingMode] = useState<'user' | 'environment'>(facingMode);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const startingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   const startCamera = useCallback(async () => {
+    if (startingRef.current) return;
+    if (streamRef.current) return;
+    
+    startingRef.current = true;
     setIsLoading(true);
     setError(null);
 
     try {
       const constraints: MediaStreamConstraints = {
         video: {
-          facingMode: currentFacingMode,
+          facingMode: facingMode,
           width: { ideal: 1920 },
           height: { ideal: 1080 },
         },
       };
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      setStream(mediaStream);
+      streamRef.current = mediaStream;
 
-      if (videoRef.current) {
+      if (videoRef.current && isMountedRef.current) {
         videoRef.current.srcObject = mediaStream;
         await videoRef.current.play();
+        setIsLoading(false);
+      } else {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
     } catch (err) {
       console.error('摄像头访问失败:', err);
       setError('无法访问摄像头，请确保已授予摄像头权限');
+      streamRef.current = null;
     } finally {
-      setIsLoading(false);
+      startingRef.current = false;
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  }, [currentFacingMode]);
+  }, [facingMode]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     startCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      isMountedRef.current = false;
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
     };
-  }, []);
+  }, [startCamera]);
 
-  const handleSwitchCamera = async () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+  const [isFrontCamera, setIsFrontCamera] = useState(facingMode === 'user');
+
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    if (streamRef.current) return;
+    startCamera();
+  }, [isFrontCamera, startCamera]);
+
+  const handleSwitchCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
-
-    setCurrentFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
-  };
+    setIsFrontCamera((prev) => !prev);
+    startingRef.current = false;
+  }, []);
 
   const handleCapture = () => {
     if (!videoRef.current) return;
@@ -75,7 +100,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (currentFacingMode === 'user') {
+    if (isFrontCamera) {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
@@ -142,7 +167,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           playsInline
           muted
           className={`max-w-full max-h-full object-contain ${
-            currentFacingMode === 'user' ? 'scale-x-[-1]' : ''
+            isFrontCamera ? 'scale-x-[-1]' : ''
           }`}
         />
       </div>
@@ -151,7 +176,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         <div className="flex items-center justify-center gap-6">
           <button
             onClick={handleSwitchCamera}
-            className="p-3 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+            disabled={!streamRef.current}
+            className="p-3 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors disabled:opacity-50"
             title="切换摄像头"
           >
             <ArrowPathIcon className="w-6 h-6" />
@@ -174,6 +200,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default CameraCapture;

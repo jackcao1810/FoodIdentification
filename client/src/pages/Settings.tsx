@@ -5,9 +5,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import {
   UserCircleIcon,
-  BellIcon,
   LockClosedIcon,
-  PaintBrushIcon,
   GlobeAltIcon,
   TrashIcon,
   ArrowRightOnRectangleIcon,
@@ -42,90 +40,29 @@ const Settings: React.FC = () => {
             账户设置
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-surface-50 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
+            <div 
+              className="flex items-center justify-between p-4 bg-surface-50 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors"
+              onClick={() => navigate('/profile')}
+            >
               <div>
                 <p className="font-medium text-surface-900">修改个人信息</p>
                 <p className="text-sm text-surface-500">更新您的昵称、头像等</p>
               </div>
               <span className="text-surface-400">›</span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-surface-50 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
+            <div 
+              className="flex items-center justify-between p-4 bg-surface-50 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors"
+              onClick={() => navigate('/settings/password')}
+            >
               <div>
                 <p className="font-medium text-surface-900">修改密码</p>
                 <p className="text-sm text-surface-500">保护您的账户安全</p>
               </div>
               <span className="text-surface-400">›</span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-surface-50 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
-              <div>
-                <p className="font-medium text-surface-900">绑定手机</p>
-                <p className="text-sm text-surface-500">用于登录验证和找回密码</p>
-              </div>
-              <span className="primary-600 text-sm font-medium">去绑定</span>
-            </div>
           </div>
         </Card>
       )}
-
-      {/* Notification Settings */}
-      <Card>
-        <h3 className="font-semibold text-surface-900 mb-4 flex items-center gap-2">
-          <BellIcon className="w-5 h-5 text-primary-500" />
-          通知设置
-        </h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4">
-            <div>
-              <p className="font-medium text-surface-900">饮食提醒</p>
-              <p className="text-sm text-surface-500">定时提醒您记录饮食</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between p-4">
-            <div>
-              <p className="font-medium text-surface-900">热量摄入提醒</p>
-              <p className="text-sm text-surface-500">超过每日目标时提醒</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between p-4">
-            <div>
-              <p className="font-medium text-surface-900">健康建议推送</p>
-              <p className="text-sm text-surface-500">获取个性化营养建议</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-            </label>
-          </div>
-        </div>
-      </Card>
-
-      {/* Appearance */}
-      <Card>
-        <h3 className="font-semibold text-surface-900 mb-4 flex items-center gap-2">
-          <PaintBrushIcon className="w-5 h-5 text-primary-500" />
-          外观设置
-        </h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4">
-            <div>
-              <p className="font-medium text-surface-900">深色模式</p>
-              <p className="text-sm text-surface-500">切换深色/浅色主题</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-            </label>
-          </div>
-        </div>
-      </Card>
 
       {isLoggedIn && (
         <Card>

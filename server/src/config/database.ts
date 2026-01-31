@@ -48,12 +48,15 @@ export async function initDatabase(): Promise<void> {
       height_cm DECIMAL(5,2),
       weight_kg DECIMAL(5,2),
       target_calories INTEGER DEFAULT 2000,
+      target_protein INTEGER DEFAULT 80,
+      target_carbohydrates INTEGER DEFAULT 300,
+      target_fat INTEGER DEFAULT 65,
       dietary_preferences TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  
+
   database.run(`
     CREATE TABLE IF NOT EXISTS dishes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

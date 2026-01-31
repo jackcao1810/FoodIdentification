@@ -38,32 +38,37 @@ export const statisticsService = {
     streak: number;
     achievements: string[];
   }> {
-    const response = await api.get(API_ENDPOINTS.STATISTICS.OVERVIEW);
-    return response.data;
+    const response = await api.get<{ success: boolean; data: {
+      todayCalories: number;
+      weeklyAverage: number;
+      streak: number;
+      achievements: string[];
+    } }>(API_ENDPOINTS.STATISTICS.OVERVIEW);
+    return response.data.data;
   },
 
   async getTrend(period: 'week' | 'month' = 'week'): Promise<TrendData> {
-    const response = await api.get(API_ENDPOINTS.STATISTICS.TREND, { params: { period } });
-    return response.data;
+    const response = await api.get<{ success: boolean; data: TrendData }>(API_ENDPOINTS.STATISTICS.TREND, { params: { period } });
+    return response.data.data;
   },
 
   async getNutrients(period: 'week' | 'month' = 'week'): Promise<NutrientStats> {
-    const response = await api.get(API_ENDPOINTS.STATISTICS.NUTRIENTS, { params: { period } });
-    return response.data;
+    const response = await api.get<{ success: boolean; data: NutrientStats }>(API_ENDPOINTS.STATISTICS.NUTRIENTS, { params: { period } });
+    return response.data.data;
   },
 
   async getDailyStats(date?: string): Promise<DailySummary> {
-    const response = await api.get(API_ENDPOINTS.STATISTICS.DAILY, { params: { date } });
-    return response.data;
+    const response = await api.get<{ success: boolean; data: DailySummary }>(API_ENDPOINTS.STATISTICS.DAILY, { params: { date } });
+    return response.data.data;
   },
 
   async getWeeklyStats(): Promise<DailySummary[]> {
-    const response = await api.get(API_ENDPOINTS.STATISTICS.WEEKLY);
-    return response.data;
+    const response = await api.get<{ success: boolean; data: DailySummary[] }>(API_ENDPOINTS.STATISTICS.WEEKLY);
+    return response.data.data;
   },
 
   async getMonthlyStats(): Promise<DailySummary[]> {
-    const response = await api.get(API_ENDPOINTS.STATISTICS.MONTHLY);
-    return response.data;
+    const response = await api.get<{ success: boolean; data: DailySummary[] }>(API_ENDPOINTS.STATISTICS.MONTHLY);
+    return response.data.data;
   },
 };

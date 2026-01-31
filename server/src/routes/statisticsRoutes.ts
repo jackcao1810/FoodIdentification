@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../config/database.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -97,7 +97,7 @@ router.get('/trend', authenticateToken, async (req, res, next) => {
   }
 });
 
-router.get('/nutrients', authenticateToken, async (req, res, next) => {
+router.get('/nutrients', authenticateToken, async (req: AuthRequest, res, next) => {
   try {
     const { period = 'week' } = req.query;
     const db = await getDb();
@@ -114,10 +114,25 @@ router.get('/nutrients', authenticateToken, async (req, res, next) => {
       [req.user!.id, startDate.toISOString().split('T')[0]]
     );
 
+    const userGoals = db.exec(
+      'SELECT target_protein, target_carbohydrates, target_fat FROM users WHERE id = ?',
+      [req.user!.id]
+    );
+
     const dayCount = period === 'month' ? 30 : 7;
     const protein = records.length > 0 ? records[0].values[0][0] : 0;
     const carbs = records.length > 0 ? records[0].values[0][1] : 0;
     const fat = records.length > 0 ? records[0].values[0][2] : 0;
+    
+    const proteinGoal = userGoals.length > 0 && userGoals[0].values.length > 0 
+      ? userGoals[0].values[0][0] || 80 
+      : 80;
+    const carbsGoal = userGoals.length > 0 && userGoals[0].values.length > 0 
+      ? userGoals[0].values[0][1] || 300 
+      : 300;
+    const fatGoal = userGoals.length > 0 && userGoals[0].values.length > 0 
+      ? userGoals[0].values[0][2] || 65 
+      : 65;
 
     res.json({
       success: true,
@@ -125,9 +140,9 @@ router.get('/nutrients', authenticateToken, async (req, res, next) => {
         averageProtein: Math.round(protein / dayCount),
         averageCarbs: Math.round(carbs / dayCount),
         averageFat: Math.round(fat / dayCount),
-        proteinGoal: 80,
-        carbsGoal: 300,
-        fatGoal: 65,
+        proteinGoal,
+        carbsGoal,
+        fatGoal,
       },
     });
   } catch (error) {

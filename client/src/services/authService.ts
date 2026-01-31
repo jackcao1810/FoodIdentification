@@ -9,6 +9,9 @@ export interface User {
   heightCm?: number;
   weightKg?: number;
   targetCalories: number;
+  targetProtein?: number;
+  targetCarbohydrates?: number;
+  targetFat?: number;
 }
 
 export interface LoginCredentials {

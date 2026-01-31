@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     PROFILE: '/auth/profile',
+    CHANGE_PASSWORD: '/auth/password',
     REFRESH: '/auth/refresh',
   },
   DISHES: {
