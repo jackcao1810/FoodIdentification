@@ -1,3 +1,5 @@
+# PyTorch CPU 版本（必须使用此命令安装）
+# pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0
 transformers>=4.30.0
 Pillow>=9.0.0

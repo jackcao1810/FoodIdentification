@@ -39,7 +39,7 @@ vim .env
 ### 3. 构建并启动服务
 
 ```bash
-# 构建所有服务（首次会下载基础镜像）
+# 构建所有服务（首次会下载基础镜像，包括 PyTorch CPU 版本）
 docker compose build
 
 # 启动所有服务
@@ -48,6 +48,8 @@ docker compose up -d
 # 查看日志
 docker compose logs -f
 ```
+
+**注意：** Python 服务使用 PyTorch CPU 版本，无需 GPU。
 
 ### 4. 验证服务
 

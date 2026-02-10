@@ -14,10 +14,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+# 先安装 PyTorch CPU 版本（必须使用官方 CPU 版本）
+RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
 # 复制依赖文件
 COPY python-service/requirements.txt .
 
-# 安装 Python 依赖
+# 安装其他 Python 依赖
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制应用代码

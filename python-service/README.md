@@ -13,7 +13,13 @@
 
 ## 安装依赖
 
+**重要：必须使用 PyTorch CPU 版本**
+
 ```bash
+# 1. 首先安装 PyTorch CPU 版本（必须使用官方 CPU 版本）
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# 2. 安装其他依赖
 pip install -r requirements.txt
 ```
 
