@@ -5,7 +5,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # 设置环境变量
-NODE_ENV=production
+ENV NODE_ENV=production
 
 # 安装依赖
 COPY server/package*.json ./
