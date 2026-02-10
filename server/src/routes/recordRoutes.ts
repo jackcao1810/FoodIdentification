@@ -110,20 +110,27 @@ router.post('/', authenticateToken, async (req, res, next) => {
     let totalFat = 0;
 
     for (const dish of dishes) {
-      const result = db.exec('SELECT * FROM dishes WHERE id = ? AND is_active = 1', [dish.dishId]);
-      if (result.length > 0 && result[0].values.length > 0) {
-        const columns = result[0].columns;
-        const values = result[0].values[0];
-        const dbDish: any = {};
-        columns.forEach((col, i) => { dbDish[col] = values[i]; });
-        
-        const portion = dish.portion || 100;
-        const multiplier = portion / 100;
-        
-        totalCalories += dbDish.calories_per_100g * multiplier;
-        totalProtein += dbDish.protein * multiplier;
-        totalCarbs += dbDish.carbohydrates * multiplier;
-        totalFat += dbDish.fat * multiplier;
+      if (dish.calories !== undefined) {
+        totalCalories += dish.calories;
+        totalProtein += dish.nutrients?.protein || 0;
+        totalCarbs += dish.nutrients?.carbohydrates || 0;
+        totalFat += dish.nutrients?.fat || 0;
+      } else {
+        const result = db.exec('SELECT * FROM dishes WHERE id = ? AND is_active = 1', [dish.dishId]);
+        if (result.length > 0 && result[0].values.length > 0) {
+          const columns = result[0].columns;
+          const values = result[0].values[0];
+          const dbDish: any = {};
+          columns.forEach((col, i) => { dbDish[col] = values[i]; });
+          
+          const portion = dish.portion || 100;
+          const multiplier = portion / 100;
+          
+          totalCalories += dbDish.calories_per_100g * multiplier;
+          totalProtein += dbDish.protein * multiplier;
+          totalCarbs += dbDish.carbohydrates * multiplier;
+          totalFat += dbDish.fat * multiplier;
+        }
       }
     }
 

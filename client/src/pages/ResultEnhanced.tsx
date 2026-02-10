@@ -91,11 +91,17 @@ const ResultEnhanced: React.FC = () => {
 
       const portions = new Map<number, DishPortion>();
       recognitionResult.dishes.forEach(dish => {
-        const nutrients = foodRecognitionService.calculateNutrients(dish.dishId, dish.standardPortion);
+        const portion = dish.standardPortion;
+        const nutrients = {
+          calories: Math.round(dish.caloriesPer100g * portion / 100),
+          protein: parseFloat((dish.protein * portion / 100).toFixed(1)),
+          carbohydrates: parseFloat((dish.carbohydrates * portion / 100).toFixed(1)),
+          fat: parseFloat((dish.fat * portion / 100).toFixed(1))
+        };
         portions.set(dish.dishId, {
           dish,
-          portion: dish.standardPortion,
-          nutrients: nutrients || { calories: 0, protein: 0, carbohydrates: 0, fat: 0 }
+          portion,
+          nutrients
         });
       });
       setDishPortions(portions);
@@ -291,7 +297,12 @@ const ResultEnhanced: React.FC = () => {
             {dishes.map((dish) => {
               const dishPortion = dishPortions.get(dish.dishId);
               const portion = dishPortion?.portion || dish.standardPortion;
-              const nutrients = dishPortion?.nutrients || foodRecognitionService.calculateNutrients(dish.dishId, portion);
+              const nutrients = dishPortion?.nutrients || {
+                calories: Math.round(dish.caloriesPer100g * portion / 100),
+                protein: parseFloat((dish.protein * portion / 100).toFixed(1)),
+                carbohydrates: parseFloat((dish.carbohydrates * portion / 100).toFixed(1)),
+                fat: parseFloat((dish.fat * portion / 100).toFixed(1))
+              };
 
               return (
                 <Card key={dish.dishId}>

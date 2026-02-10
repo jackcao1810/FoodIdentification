@@ -50,3 +50,17 @@ coverage/
 
 # Trae
 .trae/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+.env/
+*.egg-info/
+dist/
+build/
+.eggs/
+egg-info/
+logs/

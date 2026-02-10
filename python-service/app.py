@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from food_recognition import get_recognizer
-from database import init_database
+from database import init_database, get_all_dishes, get_dish_by_id
 
 app = FastAPI(
     title="Food Recognition API",
@@ -162,6 +162,34 @@ async def model_info():
             "labels": list(recognizer.model.config.id2label.values())[:20],
             "supported_dishes": len(recognizer._get_dishes_cache())
         }
+    })
+
+
+@app.get("/dishes")
+async def get_dishes():
+    """获取所有菜品列表"""
+    dishes = get_all_dishes()
+    return JSONResponse(content={
+        "success": True,
+        "data": dishes
+    })
+
+
+@app.get("/dishes/{dish_id}")
+async def get_dish(dish_id: int):
+    """根据ID获取单个菜品"""
+    dish = get_dish_by_id(dish_id)
+    if not dish:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "success": False,
+                "error": {"message": "菜品不存在"}
+            }
+        )
+    return JSONResponse(content={
+        "success": True,
+        "data": dish
     })
 
 

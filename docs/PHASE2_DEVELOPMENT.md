@@ -492,3 +492,150 @@ Response:
 | 2026-01-30 | 集成History页面真实API | AI Assistant |
 | 2026-01-30 | 集成Result页面保存功能 | AI Assistant |
 | 2026-01-30 | 整体测试和Bug修复（前端+后端） | AI Assistant |
+| 2026-02-10 | 添加Python后端服务、数据库扩展101道菜品 | AI Assistant |
+
+---
+
+## 2.3 Python 后端服务 ✅（新增）
+
+**创建日期：** 2026-02-10
+
+### 技术栈
+
+- **FastAPI**：高性能 Python Web 框架
+- **PyTorch**：深度学习框架
+- **Transformers**：Hugging Face 预训练模型库
+- **SQLite**：菜品数据库
+
+### 服务文件
+
+```
+python-service/
+├── app.py                    # FastAPI 服务入口
+├── food_recognition.py       # 核心识别逻辑
+├── database.py               # SQLite 数据库操作
+├── requirements.txt           # Python 依赖
+└── data/
+    └── dishes.db            # 菜品数据库
+```
+
+### API 接口
+
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/health` | GET | 健康检查 |
+| `/recognize` | POST | 菜品识别 |
+| `/model/info` | GET | 模型信息 |
+| `/dishes` | GET | 获取所有菜品 |
+| `/dishes/{id}` | GET | 获取单个菜品 |
+
+### 核心功能
+
+1. **菜品识别**
+   - 接收图片文件，调用 `nateraw/food` 模型
+   - 返回识别结果和营养数据
+   - 只返回置信度 > 50% 的结果
+
+2. **菜品数据库 API**
+   - 提供 101 道菜品的完整营养信息
+   - 支持按 ID 查询单个菜品
+   - 前端通过 API 动态获取菜品数据
+
+## 2.4 菜品数据库扩展 ✅（新增）
+
+**创建日期：** 2026-02-10
+
+### 扩展内容
+
+从 20 道中文家常菜扩展至 **101 道 Food-101 数据集菜品**。
+
+### 类别分布
+
+| 类别 | 数量 | 示例菜品 |
+|------|------|----------|
+| 甜点 | 25 | 苹果派、芝士蛋糕、提拉米苏、马卡龙 |
+| 肉类 | 15 | 烤肋排、菲力牛排、北京烤鸭、猪排 |
+| 海鲜 | 12 | 炸鱼薯条、烤三文鱼、刺身、生蚝 |
+| 素菜 | 8 | 凯撒沙拉、希腊沙拉、海藻沙拉 |
+| 主食 | 28 | 石锅拌饭、披萨、汉堡、寿司 |
+| 汤 | 5 | 蛤蜊浓汤、法式洋葱汤、味增汤 |
+| 三明治 | 8 | 总汇三明治、鸡肉墨西哥饼、热狗 |
+
+## 2.5 前后端数据同步 ✅（新增）
+
+**创建日期：** 2026-02-10
+
+### 同步方案
+
+前端移除硬编码的 101 道菜品数组，改为通过 API 从 Python 后端动态获取。
+
+### 前端修改
+
+```typescript
+// foodRecognitionService.ts
+let FOOD_DATABASE_CACHE: DishInfo[] | null = null;
+
+async function getDishesFromAPI(): Promise<DishInfo[]> {
+  if (FOOD_DATABASE_CACHE) {
+    return FOOD_DATABASE_CACHE;
+  }
+  const response = await api.get('/dishes');
+  // ...
+}
+```
+
+### 数据流
+
+```
+前端 (React)
+    │
+    ├── /dishes ──▶ Vite Proxy ──▶ Node.js 后端 ──▶ Python 服务
+    │                                                      │
+    └── SQLite 数据库 (dishes.db) ◀──────────────────────────
+```
+
+## 2.6 置信度过滤 ✅（新增）
+
+**创建日期：** 2026-02-10
+
+### 过滤逻辑
+
+```python
+# food_recognition.py
+for i in range(len(topk_probs[0])):
+    prob = topk_probs[0][i].item()
+    if prob < 0.5:
+        continue
+    # ...
+```
+
+### 效果
+
+只有置信度高于 50% 的识别结果会返回给用户，减少误判。
+
+---
+
+## 启动服务
+
+### Python 后端
+
+```bash
+cd python-service
+python -m venv venv
+.\venv\Scripts\activate
+python app.py
+```
+
+服务运行在 http://localhost:8000
+
+### 验证健康状态
+
+```bash
+curl http://localhost:8000/health
+```
+
+### 获取菜品列表
+
+```bash
+curl http://localhost:8000/dishes
+```
