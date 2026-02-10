@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 import { getDb, saveDb } from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
+
+const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -55,6 +59,69 @@ router.post('/upload', authenticateToken, upload.single('image'), async (req, re
     });
   } catch (error) {
     next(error);
+  }
+});
+
+router.post('/recognize', authenticateToken, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: { message: '请上传图片' } });
+    }
+
+    const recordId = uuidv4();
+    const imagePath = path.join(process.cwd(), 'uploads', req.file.filename);
+    const imageUrl = `/uploads/${req.file.filename}`;
+
+    const FormData = (await import('form-data')).default;
+    const form = new FormData();
+    form.append('file', fs.createReadStream(imagePath), req.file.originalname);
+
+    const pythonResponse = await axios.post(
+      `${PYTHON_SERVICE_URL}/recognize`,
+      form,
+      {
+        headers: {
+          ...form.getHeaders(),
+        },
+        timeout: 60000,
+      }
+    );
+
+    const pythonResult = pythonResponse.data;
+    if (!pythonResult.success) {
+      throw new Error(pythonResult.error?.message || '识别失败');
+    }
+
+    const { dishes, totalCalories, totalWeight, processingTime } = pythonResult.data;
+
+    const avgConfidence = dishes.reduce((sum: number, dish: any) => sum + dish.confidence, 0) / dishes.length;
+
+    const db = await getDb();
+    db.run(
+      `INSERT INTO recognition_records (id, user_id, image_url, recognized_dishes, total_calories, confidence_score, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'completed', datetime('now'))`,
+      [recordId, req.user!.id, imageUrl, JSON.stringify(dishes), totalCalories, avgConfidence]
+    );
+    saveDb();
+
+    res.json({
+      success: true,
+      data: {
+        recordId,
+        imageUrl,
+        dishes,
+        totalCalories,
+        totalWeight,
+        processingTime,
+      },
+    });
+  } catch (error: any) {
+    console.error('识别错误:', error);
+    const errorMessage = error.response?.data?.error?.message || error.message || '识别失败';
+    res.status(500).json({
+      success: false,
+      error: { message: errorMessage },
+    });
   }
 });
 

@@ -23,6 +23,26 @@ export interface Dish {
   isActive: boolean;
 }
 
+export interface RecognitionResult {
+  dishId: number;
+  dishName: string;
+  category: string;
+  confidence: number;
+  caloriesPer100g: number;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+  density: number;
+  standardPortion: number;
+}
+
+export interface FoodRecognitionResult {
+  dishes: RecognitionResult[];
+  totalCalories: number;
+  totalWeight: number;
+  processingTime: number;
+}
+
 export interface DishRecognitionResult {
   dishId: number;
   dishName: string;

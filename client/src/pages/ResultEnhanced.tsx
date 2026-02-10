@@ -53,44 +53,16 @@ const ResultEnhanced: React.FC = () => {
   const [result, setResult] = useState<FoodRecognitionResult | null>(null);
   const [dishPortions, setDishPortions] = useState<Map<number, DishPortion>>(new Map());
   const [error, setError] = useState<string | null>(null);
-  const [modelLoaded, setModelLoaded] = useState(false);
 
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const [recordType, setRecordType] = useState<string>('lunch');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const initModel = async () => {
-      try {
-        setProgress(0);
-        setProgressStatus('正在初始化...');
-
-        foodRecognitionService.setProgressCallback((p, status) => {
-          setProgress(p);
-          setProgressStatus(status);
-        });
-
-        await foodRecognitionService.loadModel();
-        setModelLoaded(true);
-        setProgress(100);
-        setProgressStatus('模型加载完成');
-        message.success('AI模型加载完成');
-      } catch (err) {
-        console.error('模型加载失败:', err);
-        setError('AI模型加载失败，请刷新页面重试');
-        setProgress(0);
-        setProgressStatus('');
-      }
-    };
-
-    initModel();
-  }, []);
-
-  useEffect(() => {
-    if (previewUrl && modelLoaded && !result) {
+    if (previewUrl && !result) {
       handleRecognize();
     }
-  }, [previewUrl, modelLoaded, result]);
+  }, [previewUrl, result]);
 
   const handleRecognize = async () => {
     if (!previewUrl) {
@@ -218,36 +190,6 @@ const ResultEnhanced: React.FC = () => {
           <Button variant="primary" onClick={() => navigate('/upload')}>
             前往上传
           </Button>
-        </div>
-      );
-    }
-
-    if (!modelLoaded && !error) {
-      return (
-        <div className="text-center py-16">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-primary-200 rounded-full"></div>
-            <div
-              className="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"
-              style={{ animationDuration: '1s' }}
-            ></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <SparklesIcon className="w-10 h-10 text-primary-500" />
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-surface-900 mb-2">
-            加载AI模型中...
-          </h3>
-          <p className="text-surface-500 mb-4">
-            {progressStatus || '正在初始化'}
-          </p>
-          <div className="w-64 mx-auto bg-surface-100 rounded-full h-2">
-            <div
-              className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <p className="text-sm text-surface-400 mt-2">{progress}%</p>
         </div>
       );
     }
