@@ -8,6 +8,9 @@ import os
 
 
 class FoodRecognition:
+    DEFAULT_MODEL_NAME = "nateraw/food"
+    LOCAL_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "food")
+
     FOOD101_LABELS = [
         'apple_pie', 'baby_back_ribs', 'baklava', 'beef_carpaccio', 'beef_tartare',
         'beet_salad', 'beignets', 'bibimbap', 'bread_pudding', 'breakfast_burrito',
@@ -71,15 +74,74 @@ class FoodRecognition:
         self.processor = None
         self.model = None
         self._model_loaded = False
+        self._dishes_cache = None
 
-    def load_model(self, model_name: str = "nateraw/food"):
-        """加载预训练模型"""
+    def _get_local_model_path(self, model_name: str) -> str:
+        """获取本地模型路径"""
+        model_cache_name = model_name.replace("/", "_")
+        return os.path.join(self.LOCAL_MODEL_DIR, model_cache_name)
+
+    def _is_model_cached(self, model_name: str) -> bool:
+        """检查模型是否已缓存到本地"""
+        local_path = self._get_local_model_path(model_name)
+        required_files = ["config.json", "pytorch_model.bin", "preprocessor_config.json"]
+        return all(os.path.exists(os.path.join(local_path, f)) for f in required_files)
+
+    def _download_model(self, model_name: str) -> str:
+        """下载模型到本地"""
+        local_path = self._get_local_model_path(model_name)
+        os.makedirs(local_path, exist_ok=True)
+
+        print(f"正在下载模型: {model_name}")
+        print(f"保存路径: {local_path}")
+
+        try:
+            processor = AutoImageProcessor.from_pretrained(model_name)
+            model = AutoModelForImageClassification.from_pretrained(model_name)
+
+            print(f"正在保存模型到本地...")
+            processor.save_pretrained(local_path)
+            model.save_pretrained(local_path)
+            print("模型保存完成")
+
+            return local_path
+        except Exception as e:
+            print(f"下载模型失败: {e}")
+            raise e
+
+    def load_model(self, model_name: str = None):
+        """加载预训练模型，优先使用本地缓存"""
         if self._model_loaded:
             return
 
+        model_name = model_name or self.DEFAULT_MODEL_NAME
         print(f"正在加载模型: {model_name}")
-        self.processor = AutoImageProcessor.from_pretrained(model_name)
-        self.model = AutoModelForImageClassification.from_pretrained(model_name)
+
+        local_path = self._get_local_model_path(model_name)
+        if self._is_model_cached(model_name):
+            print(f"发现本地缓存模型: {local_path}")
+            print("正在从本地加载...")
+            self.processor = AutoImageProcessor.from_pretrained(local_path)
+            self.model = AutoModelForImageClassification.from_pretrained(local_path)
+        else:
+            print("本地未找到模型，正在从 Hugging Face 下载...")
+            self._download_model(model_name)
+            print("正在从本地加载...")
+            self.processor = AutoImageProcessor.from_pretrained(local_path)
+            self.model = AutoModelForImageClassification.from_pretrained(local_path)
+
+        self.model.eval()
+        self._model_loaded = True
+        print("模型加载完成")
+
+    def load_model_from_local(self, local_path: str):
+        """从指定本地路径加载模型"""
+        if self._model_loaded:
+            return
+
+        print(f"正在从本地路径加载模型: {local_path}")
+        self.processor = AutoImageProcessor.from_pretrained(local_path)
+        self.model = AutoModelForImageClassification.from_pretrained(local_path)
         self.model.eval()
         self._model_loaded = True
         print("模型加载完成")

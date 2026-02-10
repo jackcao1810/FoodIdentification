@@ -64,3 +64,6 @@ build/
 .eggs/
 egg-info/
 logs/
+
+# Models (downloaded from Hugging Face)
+models/

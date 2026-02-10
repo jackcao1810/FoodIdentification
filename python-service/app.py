@@ -47,6 +47,51 @@ async def startup_event():
         print(f"初始化失败: {e}")
 
 
+@app.get("/model/download")
+async def download_model():
+    """手动触发模型下载到本地"""
+    global recognizer
+    if recognizer is None:
+        from food_recognition import FoodRecognition
+        recognizer = FoodRecognition()
+
+    import threading
+
+    def download():
+        try:
+            recognizer.load_model()
+        except Exception as e:
+            print(f"模型下载失败: {e}")
+
+    thread = threading.Thread(target=download, daemon=True)
+    thread.start()
+
+    return JSONResponse(content={
+        "success": True,
+        "message": "模型下载已开始，请稍后查看日志"
+    })
+
+
+@app.get("/model/status")
+async def model_status():
+    """检查模型下载状态"""
+    from food_recognition import FoodRecognition
+    fr = FoodRecognition()
+    local_path = fr._get_local_model_path(fr.DEFAULT_MODEL_NAME)
+    is_cached = fr._is_model_cached(fr.DEFAULT_MODEL_NAME)
+
+    return JSONResponse(content={
+        "success": True,
+        "data": {
+            "model_name": fr.DEFAULT_MODEL_NAME,
+            "local_path": local_path,
+            "is_cached": is_cached,
+            "cache_exists": os.path.exists(local_path),
+            "required_files": ["config.json", "pytorch_model.bin", "preprocessor_config.json"]
+        }
+    })
+
+
 @app.get("/")
 async def root():
     """健康检查"""
