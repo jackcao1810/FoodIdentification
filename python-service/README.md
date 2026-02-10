@@ -9,6 +9,7 @@
 - 支持单张图片和批量识别
 - 自动匹配中文菜品名称和营养数据
 - 统一菜品数据库 API
+- **本地模型缓存** - 支持离线使用
 
 ## 安装依赖
 
@@ -110,6 +111,35 @@ GET /model/info
   }
 }
 ```
+
+### 模型状态
+
+```http
+GET /model/status
+```
+
+检查模型是否已下载到本地。
+
+响应示例:
+```json
+{
+  "success": true,
+  "data": {
+    "model_name": "nateraw/food",
+    "local_path": "models/food_nateraw_food",
+    "is_cached": true,
+    "cache_exists": true
+  }
+}
+```
+
+### 下载模型
+
+```http
+GET /model/download
+```
+
+手动触发模型下载到本地（首次启动时会自动下载）。
 
 ### 获取菜品列表
 
@@ -225,6 +255,25 @@ const response = await api.get('/dishes');
 
 参考: https://huggingface.co/nateraw/food
 
+### 本地模型缓存
+
+服务支持将模型缓存到本地磁盘，首次启动时会自动从 Hugging Face 下载模型，后续启动直接从本地加载，支持离线使用。
+
+**模型缓存位置：**
+```
+python-service/
+├── models/
+│   └── food_nateraw_food/
+│       ├── config.json
+│       ├── pytorch_model.bin
+│       └── preprocessor_config.json
+```
+
+**加载逻辑：**
+1. 检查本地是否有缓存模型
+2. 如有 → 从本地加载
+3. 如无 → 从 Hugging Face 下载到本地，然后加载
+
 ## 项目结构
 
 ```
@@ -232,9 +281,11 @@ python-service/
 ├── app.py                    # FastAPI 服务入口
 ├── food_recognition.py       # 核心识别逻辑
 ├── database.py               # SQLite 数据库操作
-├── requirements.txt           # Python 依赖
+├── requirements.txt         # Python 依赖
 ├── data/
-│   └── dishes.db            # 菜品数据库
+│   └── dishes.db             # 菜品数据库
+├── models/                   # 本地模型缓存
+│   └── food_nateraw_food/    # Hugging Face 模型
 └── README.md                 # 本文档
 ```
 
@@ -251,3 +302,7 @@ python-service/
 - 扩展菜品数据库至 101 道 Food-101 菜品
 - 新增 `/dishes` 和 `/dishes/{id}` API 端点
 - 前端改为通过 API 获取菜品数据，统一数据源
+- **新增本地模型缓存功能**
+  - 首次启动自动从 Hugging Face 下载模型到本地
+  - 后续启动直接从本地加载，支持离线使用
+  - 新增 `/model/status` 和 `/model/download` API 端点

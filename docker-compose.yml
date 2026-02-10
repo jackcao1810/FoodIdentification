@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # Python AI 识别服务
+  python:
+    build:
+      context: .
+      dockerfile: python-service/Dockerfile
+    container_name: food-id-python
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHON_SERVICE_URL=http://localhost:8000
+    volumes:
+      - python-models:/app/models
+      - python-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - food-id-network
+
+  # Node.js 后端服务
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: food-id-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PYTHON_SERVICE_URL=http://python:8000
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+    volumes:
+      - server-uploads:/app/uploads
+    depends_on:
+      python:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - food-id-network
+
+  # Nginx 前端服务
+  nginx:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    container_name: food-id-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    volumes:
+      - nginx-cache:/var/cache/nginx
+    networks:
+      - food-id-network
+
+volumes:
+  # Python 模型缓存
+  python-models:
+    driver: local
+  # Python 数据文件
+  python-data:
+    driver: local
+  # Node.js 上传文件
+  server-uploads:
+    driver: local
+  # Nginx 缓存
+  nginx-cache:
+    driver: local
+
+networks:
+  food-id-network:
+    driver: bridge
