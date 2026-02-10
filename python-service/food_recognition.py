@@ -3,33 +3,11 @@ from PIL import Image
 import torch
 import torch.nn.functional as F
 from typing import List, Dict, Optional
+from database import get_all_dishes, get_dish_by_food101_class
 import os
 
 
 class FoodRecognition:
-    FOOD_DATABASE = [
-        {"id": 1, "name": "宫保鸡丁", "category": "肉类", "caloriesPer100g": 198, "protein": 16.2, "carbohydrates": 8.4, "fat": 12.1, "density": 0.85, "standardPortion": 120, "food101Class": "chicken_wings"},
-        {"id": 2, "name": "红烧肉", "category": "肉类", "caloriesPer100g": 320, "protein": 14.5, "carbohydrates": 4.2, "fat": 28.1, "density": 0.9, "standardPortion": 100, "food101Class": "pulled_pork_sandwich"},
-        {"id": 3, "name": "糖醋里脊", "category": "肉类", "caloriesPer100g": 245, "protein": 18.3, "carbohydrates": 12.5, "fat": 14.2, "density": 0.85, "standardPortion": 100, "food101Class": "pork_chop"},
-        {"id": 4, "name": "番茄炒蛋", "category": "素菜", "caloriesPer100g": 156, "protein": 9.8, "carbohydrates": 8.6, "fat": 10.5, "density": 0.8, "standardPortion": 150, "food101Class": "eggs_benedict"},
-        {"id": 5, "name": "麻婆豆腐", "category": "豆制品", "caloriesPer100g": 186, "protein": 12.5, "carbohydrates": 5.8, "fat": 13.2, "density": 0.75, "standardPortion": 150, "food101Class": "lasagna"},
-        {"id": 6, "name": "回锅肉", "category": "肉类", "caloriesPer100g": 298, "protein": 15.8, "carbohydrates": 3.5, "fat": 25.6, "density": 0.88, "standardPortion": 100, "food101Class": "baby_back_ribs"},
-        {"id": 7, "name": "水煮鱼", "category": "水产", "caloriesPer100g": 215, "protein": 18.5, "carbohydrates": 5.2, "fat": 14.3, "density": 0.82, "standardPortion": 150, "food101Class": "fish_and_chips"},
-        {"id": 8, "name": "蒸蛋", "category": "蛋类", "caloriesPer100g": 138, "protein": 11.2, "carbohydrates": 2.4, "fat": 9.8, "density": 0.9, "standardPortion": 120, "food101Class": "deviled_eggs"},
-        {"id": 9, "name": "炒青菜", "category": "素菜", "caloriesPer100g": 65, "protein": 3.5, "carbohydrates": 6.8, "fat": 3.2, "density": 0.6, "standardPortion": 150, "food101Class": "caesar_salad"},
-        {"id": 10, "name": "米饭", "category": "主食", "caloriesPer100g": 116, "protein": 2.6, "carbohydrates": 25.6, "fat": 0.3, "density": 0.7, "standardPortion": 150, "food101Class": "fried_rice"},
-        {"id": 11, "name": "糖醋排骨", "category": "肉类", "caloriesPer100g": 285, "protein": 16.8, "carbohydrates": 15.2, "fat": 19.5, "density": 0.88, "standardPortion": 100, "food101Class": "baby_back_ribs"},
-        {"id": 12, "name": "酸辣土豆丝", "category": "素菜", "caloriesPer100g": 120, "protein": 2.5, "carbohydrates": 22.5, "fat": 3.2, "density": 0.7, "standardPortion": 150, "food101Class": "french_fries"},
-        {"id": 13, "name": "鱼香肉丝", "category": "肉类", "caloriesPer100g": 165, "protein": 14.2, "carbohydrates": 12.8, "fat": 8.5, "density": 0.82, "standardPortion": 120, "food101Class": "spaghetti_bolognese"},
-        {"id": 14, "name": "蒜蓉西兰花", "category": "素菜", "caloriesPer100g": 72, "protein": 4.5, "carbohydrates": 7.2, "fat": 2.8, "density": 0.65, "standardPortion": 150, "food101Class": "broccoli"},
-        {"id": 15, "name": "可乐鸡翅", "category": "肉类", "caloriesPer100g": 245, "protein": 17.2, "carbohydrates": 10.5, "fat": 16.8, "density": 0.85, "standardPortion": 120, "food101Class": "chicken_wings"},
-        {"id": 16, "name": "凉拌黄瓜", "category": "素菜", "caloriesPer100g": 45, "protein": 1.2, "carbohydrates": 5.8, "fat": 2.1, "density": 0.55, "standardPortion": 100, "food101Class": "caesar_salad"},
-        {"id": 17, "name": "红烧茄子", "category": "素菜", "caloriesPer100g": 98, "protein": 3.2, "carbohydrates": 12.5, "fat": 4.8, "density": 0.7, "standardPortion": 150, "food101Class": "eggplant_parmigiana"},
-        {"id": 18, "name": "清蒸鲈鱼", "category": "水产", "caloriesPer100g": 125, "protein": 18.5, "carbohydrates": 0, "fat": 5.2, "density": 0.8, "standardPortion": 150, "food101Class": "grilled_salmon"},
-        {"id": 19, "name": "干锅花菜", "category": "素菜", "caloriesPer100g": 145, "protein": 5.8, "carbohydrates": 10.5, "fat": 10.2, "density": 0.68, "standardPortion": 150, "food101Class": "cauliflower"},
-        {"id": 20, "name": "蛋炒饭", "category": "主食", "caloriesPer100g": 186, "protein": 6.5, "carbohydrates": 22.5, "fat": 8.8, "density": 0.72, "standardPortion": 200, "food101Class": "fried_rice"},
-    ]
-
     FOOD101_LABELS = [
         'apple_pie', 'baby_back_ribs', 'baklava', 'beef_carpaccio', 'beef_tartare',
         'beet_salad', 'beignets', 'bibimbap', 'bread_pudding', 'breakfast_burrito',
@@ -106,28 +84,53 @@ class FoodRecognition:
         self._model_loaded = True
         print("模型加载完成")
 
-    def _find_best_match_dish(self, model_label: str) -> Optional[Dict]:
+    def __init__(self):
+        self.processor = None
+        self.model = None
+        self._model_loaded = False
+        self._dishes_cache = None
+
+    def _get_dishes_cache(self) -> List[Dict]:
+        """获取菜品缓存"""
+        if self._dishes_cache is None:
+            self._dishes_cache = get_all_dishes()
+        return self._dishes_cache
+
+    def _find_best_match_dish(self, model_label: str, model_idx: int = None) -> Optional[Dict]:
         """根据模型标签匹配菜品数据库"""
         normalized_label = model_label.lower().replace(" ", "_")
+        dishes = self._get_dishes_cache()
 
-        for dish in self.FOOD_DATABASE:
-            if dish.get("food101Class") and dish["food101Class"].lower() == normalized_label:
+        dish_info = get_dish_by_food101_class(normalized_label)
+        if dish_info:
+            return dish_info
+
+        for dish in dishes:
+            food101_class = dish.get("food101_class") or dish.get("food101Class")
+            if food101_class and food101_class.lower() == normalized_label:
                 return dish
             if dish["name"].lower() in normalized_label or normalized_label in dish["name"].lower():
                 return dish
 
         chinese_name = self.CHINESE_NAME_MAP.get(normalized_label)
         if chinese_name:
-            for dish in self.FOOD_DATABASE:
+            for dish in dishes:
                 if chinese_name in dish["name"] or dish["name"] in chinese_name:
                     return dish
+
+        if model_idx is not None:
+            for dish in dishes:
+                if dish.get("food101_index") == model_idx:
+                    return dish
+            if 1 <= model_idx <= len(dishes):
+                return dishes[model_idx - 1]
 
         return None
 
     def _create_unknown_dish(self, label: str, confidence: float, index: int = 0) -> Dict:
         """创建未知菜品对象"""
         return {
-            "dishId": -1 * (index + 1),
+            "dishId": 1000 + index,
             "dishName": self.CHINESE_NAME_MAP.get(label, label.replace("_", " ")),
             "category": "未知",
             "confidence": float(confidence),
@@ -159,12 +162,16 @@ class FoodRecognition:
         topk_probs, topk_indices = torch.topk(probabilities, min(topk, len(probabilities[0])))
 
         dishes = []
+        unknown_dishes = []
         for i in range(len(topk_probs[0])):
             idx = topk_indices[0][i].item()
             prob = topk_probs[0][i].item()
             label = self.model.config.id2label.get(idx, "unknown")
 
-            dish_info = self._find_best_match_dish(label)
+            if prob < 0.5:
+                continue
+
+            dish_info = self._find_best_match_dish(label, idx)
 
             if dish_info:
                 dishes.append({
@@ -172,29 +179,25 @@ class FoodRecognition:
                     "dishName": dish_info["name"],
                     "category": dish_info["category"],
                     "confidence": float(prob),
-                    "caloriesPer100g": dish_info["caloriesPer100g"],
+                    "caloriesPer100g": dish_info["calories_per_100g"],
                     "protein": dish_info["protein"],
                     "carbohydrates": dish_info["carbohydrates"],
                     "fat": dish_info["fat"],
                     "density": dish_info["density"],
-                    "standardPortion": dish_info["standardPortion"]
+                    "standardPortion": dish_info["standard_portion"]
                 })
             else:
-                dishes.append(self._create_unknown_dish(label, prob, i))
+                unknown_dishes.append(self._create_unknown_dish(label, prob, len(dishes)))
+
+        dishes.extend(unknown_dishes[:3 - len(dishes)])
 
         dishes.sort(key=lambda x: x["confidence"], reverse=True)
-        dishes = dishes[:3]
-
-        total_calories = sum(d["caloriesPer100g"] * d["standardPortion"] / 100 for d in dishes)
-        total_weight = sum(d["standardPortion"] for d in dishes)
-
-        processing_time = int((time.time() - start_time) * 1000)
 
         return {
             "dishes": dishes,
-            "totalCalories": round(total_calories),
-            "totalWeight": total_weight,
-            "processingTime": processing_time
+            "totalCalories": round(sum(d["caloriesPer100g"] * d["standardPortion"] / 100 for d in dishes)),
+            "totalWeight": sum(d["standardPortion"] for d in dishes),
+            "processingTime": int((time.time() - start_time) * 1000)
         }
 
     def recognize_from_image(self, image: Image.Image, topk: int = 5) -> Dict:
@@ -216,12 +219,16 @@ class FoodRecognition:
         topk_probs, topk_indices = torch.topk(probabilities, min(topk, len(probabilities[0])))
 
         dishes = []
+        unknown_dishes = []
         for i in range(len(topk_probs[0])):
             idx = topk_indices[0][i].item()
             prob = topk_probs[0][i].item()
             label = self.model.config.id2label.get(idx, "unknown")
 
-            dish_info = self._find_best_match_dish(label)
+            if prob < 0.5:
+                continue
+
+            dish_info = self._find_best_match_dish(label, idx)
 
             if dish_info:
                 dishes.append({
@@ -229,29 +236,25 @@ class FoodRecognition:
                     "dishName": dish_info["name"],
                     "category": dish_info["category"],
                     "confidence": float(prob),
-                    "caloriesPer100g": dish_info["caloriesPer100g"],
+                    "caloriesPer100g": dish_info["calories_per_100g"],
                     "protein": dish_info["protein"],
                     "carbohydrates": dish_info["carbohydrates"],
                     "fat": dish_info["fat"],
                     "density": dish_info["density"],
-                    "standardPortion": dish_info["standardPortion"]
+                    "standardPortion": dish_info["standard_portion"]
                 })
             else:
-                dishes.append(self._create_unknown_dish(label, prob, i))
+                unknown_dishes.append(self._create_unknown_dish(label, prob, len(dishes)))
+
+        dishes.extend(unknown_dishes[:3 - len(dishes)])
 
         dishes.sort(key=lambda x: x["confidence"], reverse=True)
-        dishes = dishes[:3]
-
-        total_calories = sum(d["caloriesPer100g"] * d["standardPortion"] / 100 for d in dishes)
-        total_weight = sum(d["standardPortion"] for d in dishes)
-
-        processing_time = int((time.time() - start_time) * 1000)
 
         return {
             "dishes": dishes,
-            "totalCalories": round(total_calories),
-            "totalWeight": total_weight,
-            "processingTime": processing_time
+            "totalCalories": round(sum(d["caloriesPer100g"] * d["standardPortion"] / 100 for d in dishes)),
+            "totalWeight": sum(d["standardPortion"] for d in dishes),
+            "processingTime": int((time.time() - start_time) * 1000)
         }
 
 

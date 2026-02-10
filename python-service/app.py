@@ -9,6 +9,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from food_recognition import get_recognizer
+from database import init_database
 
 app = FastAPI(
     title="Food Recognition API",
@@ -36,12 +37,14 @@ def get_recognizer_service():
 
 @app.on_event("startup")
 async def startup_event():
-    """服务启动时加载模型"""
+    """服务启动时初始化数据库和加载模型"""
     try:
+        print("正在初始化菜品数据库...")
+        init_database()
         get_recognizer_service()
         print("Food Recognition 服务已就绪")
     except Exception as e:
-        print(f"模型加载失败: {e}")
+        print(f"初始化失败: {e}")
 
 
 @app.get("/")
@@ -157,7 +160,7 @@ async def model_info():
             "model_name": "nateraw/food",
             "num_classes": len(recognizer.model.config.id2label),
             "labels": list(recognizer.model.config.id2label.values())[:20],
-            "supported_dishes": len(recognizer.FOOD_DATABASE)
+            "supported_dishes": len(recognizer._get_dishes_cache())
         }
     })
 
