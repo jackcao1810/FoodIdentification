@@ -1,15 +1,25 @@
-# Node.js 版本
+# 构建阶段
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# 生产阶段
 FROM node:20-alpine
 
 WORKDIR /app
 
-# 设置环境变量
 ENV NODE_ENV=production
 
 COPY package*.json ./
 RUN npm ci --only=production
 
-COPY . .
+COPY --from=builder /app/dist ./dist
 
 RUN mkdir -p /app/uploads
 
