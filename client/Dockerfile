@@ -13,7 +13,7 @@ RUN npm run build
 # 生产阶段
 FROM nginx:alpine
 
-COPY --from=builder /app/client/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 

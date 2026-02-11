@@ -9,7 +9,7 @@ import os
 
 class FoodRecognition:
     DEFAULT_MODEL_NAME = "nateraw/food"
-    LOCAL_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "food")
+    LOCAL_MODEL_DIR = os.path.join(os.path.dirname(__file__), "models", "food")
 
     FOOD101_LABELS = [
         'apple_pie', 'baby_back_ribs', 'baklava', 'beef_carpaccio', 'beef_tartare',
@@ -145,12 +145,6 @@ class FoodRecognition:
         self.model.eval()
         self._model_loaded = True
         print("模型加载完成")
-
-    def __init__(self):
-        self.processor = None
-        self.model = None
-        self._model_loaded = False
-        self._dishes_cache = None
 
     def _get_dishes_cache(self) -> List[Dict]:
         """获取菜品缓存"""
